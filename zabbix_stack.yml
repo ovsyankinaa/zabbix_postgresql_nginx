@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_pass
     volumes:
-      - $PWD/sql_data/data:/var/lib/postgresql/data
+      - $PWD/sql_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD","pg_isready"]
       interval: 5s
@@ -44,6 +44,19 @@ services:
     container_name: web_zabbix
     image: zabbix/zabbix-web-nginx-pgsql:centos-trunk
     restart: always
+    environment:
+      DB_SERVER_HOST: db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_pass
+      ZBX_SERVER_HOST: zabbix_server
+      PHP_TZ: "Europe/Minsk"
+    depends_on:
+      zabbix_server:
+        condition: service_started
+    secrets:
+      - postgres_pass
+    logging:
+      driver: journald
     ports:
       - 443:8443
     networks:
