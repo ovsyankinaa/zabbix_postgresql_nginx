@@ -53,12 +53,15 @@ services:
     depends_on:
       zabbix_server:
         condition: service_started
+    volumes:
+      - $PWD/certs/:/etc/ssl/nginx:ro
     secrets:
       - postgres_pass
     logging:
       driver: journald
     ports:
       - 443:8443
+      - 80:8080  
     networks:
       - zabbix_network
 
