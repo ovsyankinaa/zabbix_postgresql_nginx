@@ -7,7 +7,18 @@ services:
     image: postgres:14
     restart: always
     environment:
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_pass 
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_pass
+    volumes:
+      - $PWD/sql_data/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD","pg_isready"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    logging:
+      driver: journald
+    secrets:
+      - postgres_pass
     networks:
       - zabbix_network
 
@@ -15,6 +26,17 @@ services:
     container_name: zabbix
     image: zabbix/zabbix-server-pgsql:centos-trunk
     restart: always
+    environment:
+      DB_SERVER_HOST: db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_pass
+    depends_on:
+      db:
+        condition: service_healthy
+    logging:
+      driver: journald
+    secrets:
+      - postgres_pass
     networks:
       - zabbix_network
 
@@ -22,6 +44,8 @@ services:
     container_name: web_zabbix
     image: zabbix/zabbix-web-nginx-pgsql:centos-trunk
     restart: always
+    ports:
+      - 443:8443
     networks:
       - zabbix_network
 
