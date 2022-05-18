@@ -10,6 +10,7 @@ services:
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_pass
     volumes:
       - $PWD/sql_data:/var/lib/postgresql
+      - $PWD/sql_data/data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD","pg_isready"]
       interval: 5s
@@ -39,6 +40,21 @@ services:
       - postgres_pass
     networks:
       - zabbix_network
+
+  zabbix_agent:
+    container_name: zabbix_agent
+    image: zabbix/zabbix-agent:centos-trunk
+    restart: always
+    environment:
+      ZBX_HOSTNAME: "Zabbix server"
+      ZBX_SERVER_HOST: localhost
+    depends_on:
+      db:
+        condition: service_healthy
+    privileged: true
+    logging:
+      driver: journald
+    network_mode: "service:zabbix_server"
 
   zabbix_frontend:
     container_name: web_zabbix
